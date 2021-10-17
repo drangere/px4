@@ -233,7 +233,11 @@ MulticopterRateControl::Run()
 			actuators.control[actuator_controls_s::INDEX_PITCH] = PX4_ISFINITE(att_control(1)) ? att_control(1) : 0.0f;
 			actuators.control[actuator_controls_s::INDEX_YAW] = PX4_ISFINITE(att_control(2)) ? att_control(2) : 0.0f;
 			actuators.control[actuator_controls_s::INDEX_THROTTLE] = PX4_ISFINITE(_thrust_sp) ? _thrust_sp : 0.0f;
-			actuators.control[actuator_controls_s::INDEX_LANDING_GEAR] = _landing_gear;
+			/****************origin*******************/
+			// actuators.control[actuator_controls_s::INDEX_LANDING_GEAR] = _landing_gear;
+			/****************release*******************/
+			actuators.control[actuator_controls_s::INDEX_LANDING_GEAR] = actuators.control[actuator_controls_s::INDEX_THROTTLE];
+			/******************************************/
 			actuators.timestamp_sample = angular_velocity.timestamp_sample;
 
 			// scale effort by battery status if enabled
