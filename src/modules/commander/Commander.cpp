@@ -673,6 +673,7 @@ Commander::Commander() :
 	_vtol_status.vtol_in_rw_mode = true;
 
 	/* init mission state, do it here to allow navigator to use stored mission even if mavlink failed to start */
+	//初始化任务mission的状态，在mavlink启动失败是，允许navigator导航使用存储的mission数据（mission都是存在sd卡中，通过dm_read()函数来读取）
 	mission_init();
 }
 
@@ -1595,12 +1596,12 @@ Commander::run()
 {
 	bool sensor_fail_tune_played = false;
 
-	const param_t param_airmode = param_find("MC_AIRMODE");
+	const param_t param_airmode = param_find("MC_AIRMODE");//获取对应的参数
 	const param_t param_rc_map_arm_switch = param_find("RC_MAP_ARM_SW");
 
 	/* initialize */
-	led_init();
-	buzzer_init();
+	led_init();//led灯初始化，在boards/px4/对应的飞控文件中实现，主要是完成对应的gpio口的初始化
+	buzzer_init();//蜂鸣器初始化，跟led一样
 
 #if defined(BOARD_HAS_POWER_CONTROL)
 	{
@@ -1620,15 +1621,16 @@ Commander::run()
 
 #endif // BOARD_HAS_POWER_CONTROL
 
-	get_circuit_breaker_params();
+	get_circuit_breaker_params();//获取对应的参数
 
 	bool param_init_forced = true;
 
-	control_status_leds(true, _battery_warning);
+	control_status_leds(true, _battery_warning);//设置状态灯的状态
 
 	/* update vehicle status to find out vehicle type (required for preflight checks) */
 	_status.system_type = _param_mav_type.get();
 
+	//判断无人机的类型
 	if (is_rotary_wing(_status) || is_vtol(_status)) {
 		_status.vehicle_type = vehicle_status_s::VEHICLE_TYPE_ROTARY_WING;
 
@@ -1642,6 +1644,7 @@ Commander::run()
 		_status.vehicle_type = vehicle_status_s::VEHICLE_TYPE_UNKNOWN;
 	}
 
+	//根据status判断是否是垂直起降固定翼
 	_status.is_vtol = is_vtol(_status);
 	_status.is_vtol_tailsitter = is_vtol_tailsitter(_status);
 
@@ -1659,15 +1662,18 @@ Commander::run()
 	arm_auth_init(&_mavlink_log_pub, &_status.system_id);
 
 	// run preflight immediately to find all relevant parameters, but don't report
+	//立即运行飞行前检查以查找所有相关参数，但不要报告
 	PreFlightCheck::preflightCheck(&_mavlink_log_pub, _status, _status_flags, false,
 				       true,
 				       hrt_elapsed_time(&_boot_timestamp));
 
+	//各种初始化完成后进入循环，执行主要的程序
 	while (!should_exit()) {
 
 		/* update parameters */
 		const bool params_updated = _parameter_update_sub.updated();
 
+		//如果参数更新了，会执行下面程序
 		if (params_updated || param_init_forced) {
 			// clear update
 			parameter_update_s update;
@@ -1691,6 +1697,7 @@ Commander::run()
 			}
 
 			/* update parameters */
+			//如果没有解锁，则执行下面程序
 			if (!_armed.armed) {
 				_status.system_type = _param_mav_type.get();
 
@@ -1722,10 +1729,11 @@ Commander::run()
 				_status_changed = true;
 			}
 
-			_status_flags.avoidance_system_required = _param_com_obs_avoid.get();
+			_status_flags.avoidance_system_required = _param_com_obs_avoid.get();//通过参数获取遥控的输入模式
 
 			_status.rc_input_mode = _param_rc_in_off.get();
 
+			//通过参数配置解锁所需要的条件
 			_arm_requirements.arm_authorization = _param_arm_auth_required.get();
 			_arm_requirements.esc_check = _param_escs_checks_required.get();
 			_arm_requirements.global_position = !_param_arm_without_gps.get();
@@ -1782,9 +1790,10 @@ Commander::run()
 		}
 
 #endif // BOARD_HAS_POWER_CONTROL
-
+		//这个应该是offboard模式控制相关的设置，待分析
 		offboard_control_update();
 
+		//下面是对供电的检查，如果通过usb供电，就不会解锁
 		if (_system_power_sub.updated()) {
 			system_power_s system_power{};
 			_system_power_sub.copy(&system_power);
@@ -1828,6 +1837,7 @@ Commander::run()
 		}
 
 		/* Update land detector */
+		//落地检查
 		if (_land_detector_sub.updated()) {
 			const bool was_landed = _land_detector.landed;
 			_land_detector_sub.copy(&_land_detector);
@@ -1870,7 +1880,7 @@ Commander::run()
 
 		/* update safety topic */
 		const bool safety_updated = _safety_sub.updated();
-
+		//更新有关安全开关
 		if (safety_updated) {
 			const bool previous_safety_valid = (_safety.timestamp != 0);
 			const bool previous_safety_off = _safety.safety_off;
@@ -1912,6 +1922,7 @@ Commander::run()
 		}
 
 		/* update vtol vehicle status*/
+		//更新垂直起降固定翼的状态
 		if (_vtol_vehicle_status_sub.updated()) {
 			/* vtol status changed */
 			_vtol_vehicle_status_sub.copy(&_vtol_status);
@@ -1955,7 +1966,7 @@ Commander::run()
 				}
 			}
 		}
-
+		//电调状态检查
 		if (_esc_status_sub.updated()) {
 			/* ESCs status changed */
 			esc_status_check();
@@ -1980,9 +1991,11 @@ Commander::run()
 			}
 		}
 
+		//检查位置估计和状态估计是否正常
 		estimator_check();
 
 		// Auto disarm when landed or kill switch engaged
+		//当落地或者停止开关接通时自动上锁
 		if (_armed.armed) {
 
 			// Check for auto-disarm on landing or pre-flight
@@ -2043,6 +2056,7 @@ Commander::run()
 
 		_cpuload_sub.update(&_cpuload);
 
+		//电池状态检查，包括在低电量时自动切换飞行模式
 		battery_status_check();
 
 		/* If in INIT state, try to proceed to STANDBY state */
@@ -2055,6 +2069,7 @@ Commander::run()
 		}
 
 		/* start mission result check */
+		//检查任务结果
 		if (_mission_result_sub.updated()) {
 			const mission_result_s &mission_result = _mission_result_sub.get();
 
@@ -2112,6 +2127,7 @@ Commander::run()
 		}
 
 		/* start geofence result check */
+		//检查电子围栏的结果
 		_geofence_result_sub.update(&_geofence_result);
 		_status.geofence_violated = _geofence_result.geofence_violated;
 

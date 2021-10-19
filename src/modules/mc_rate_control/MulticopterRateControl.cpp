@@ -236,7 +236,7 @@ MulticopterRateControl::Run()
 			/****************origin*******************/
 			// actuators.control[actuator_controls_s::INDEX_LANDING_GEAR] = _landing_gear;
 			/****************release*******************/
-			actuators.control[actuator_controls_s::INDEX_LANDING_GEAR] = actuators.control[actuator_controls_s::INDEX_THROTTLE];
+			// actuators.control[actuator_controls_s::INDEX_LANDING_GEAR] = actuators.control[actuator_controls_s::INDEX_THROTTLE] * 2 - 1;
 			/******************************************/
 			actuators.timestamp_sample = angular_velocity.timestamp_sample;
 

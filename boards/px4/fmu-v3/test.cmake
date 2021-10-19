@@ -3,7 +3,7 @@ px4_add_board(
 	PLATFORM nuttx
 	VENDOR px4
 	MODEL fmu-v3
-	LABEL default
+	LABEL test
 	TOOLCHAIN arm-none-eabi
 	ARCHITECTURE cortex-m4
 	CONSTRAINED_MEMORY
