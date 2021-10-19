@@ -403,7 +403,7 @@ private:
 	uORB::Subscription					_land_detector_sub{ORB_ID(vehicle_land_detected)};
 	uORB::Subscription					_safety_sub{ORB_ID(safety)};
 	uORB::Subscription					_manual_control_switches_sub{ORB_ID(manual_control_switches)};
-	/*****************add**********************/
+	/****************release*******************/
 	uORB::Subscription	                                _t_actuator_controls_3{ORB_ID(actuator_controls_3)};
 	/******************************************/
 	uORB::Subscription					_system_power_sub{ORB_ID(system_power)};
