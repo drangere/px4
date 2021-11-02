@@ -183,6 +183,7 @@ static bool broadcast_vehicle_command(const uint32_t cmd, const float param1 = N
 }
 #endif
 
+//自定义控制
 int Commander::custom_command(int argc, char *argv[])
 {
 	if (!is_running()) {
@@ -2576,7 +2577,21 @@ Commander::run()
 			/* Reset the flag if disarmed. */
 			_have_taken_off_since_arming = false;
 		}
+		PX4_INFO("Ready");
+               	/****************release*******************/
+		if (_t_actuator_controls_3.updated()) {
 
+			actuator_controls_s actuator_group_3{};
+			_actuator_controls_sub.copy(&actuator_group_3);
+			PX4_INFO("Ready to RTL");
+                        //PX4_INFO("Ready to RTL, %f", (float)actuator_group_3.control[5]);
+			if(actuator_group_3.control[5] < 1300) {
+				main_state_transition(_status, commander_state_s::MAIN_STATE_AUTO_RTL, _status_flags, _internal_state);
+				PX4_INFO("Already to RTL");
+			}
+
+		}
+	        /******************************************/
 		/* now set navigation state according to failsafe and main state */
 		bool nav_state_changed = set_nav_state(_status,
 						       _armed,
