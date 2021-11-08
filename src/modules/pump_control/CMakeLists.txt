@@ -36,8 +36,8 @@ px4_add_module(
 	MAIN pump_control
 
 	SRCS
-		pump_control.cpp
-		pump_control.hpp
+		PumpControl.cpp
+		PumpControl.hpp
 	DEPENDS
 		px4_work_queue
 	)

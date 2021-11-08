@@ -122,5 +122,5 @@ px4_add_board(
 		ver
 		work_queue
 	EXAMPLES
-
+	        fake_gps
 	)

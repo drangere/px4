@@ -45,18 +45,18 @@
 #include <uORB/Publication.hpp>
 #include <uORB/Subscription.hpp>
 #include <uORB/SubscriptionCallback.hpp>
-#include <uORB/topics/orb_test.h>
+//#include <uORB/topics/orb_test.h>
 #include <uORB/topics/parameter_update.h>
 #include <uORB/topics/sensor_accel.h>
 #include <uORB/topics/vehicle_status.h>
 
 using namespace time_literals;
 
-class WorkItemExample : public ModuleBase<WorkItemExample>, public ModuleParams, public px4::ScheduledWorkItem
+class PumpControl : public ModuleBase<PumpControl>, public ModuleParams, public px4::ScheduledWorkItem
 {
 public:
-	WorkItemExample();
-	~WorkItemExample() override;
+	PumpControl();
+	~PumpControl() override;
 
 	/** @see ModuleBase */
 	static int task_spawn(int argc, char *argv[]);
@@ -75,7 +75,7 @@ private:
 	void Run() override;
 
 	// Publications
-	uORB::Publication<orb_test_s> _orb_test_pub{ORB_ID(orb_test)};
+	// uORB::Publication<orb_test_s> _orb_test_pub{ORB_ID(orb_test)};
 
 	// Subscriptions
 	uORB::SubscriptionCallbackWorkItem _sensor_accel_sub{this, ORB_ID(sensor_accel)};        // subscription that schedules WorkItemExample when updated

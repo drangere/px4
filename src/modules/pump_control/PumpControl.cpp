@@ -31,21 +31,21 @@
  *
  ****************************************************************************/
 
-#include "WorkItemExample.hpp"
+#include "PumpControl.hpp"
 
-WorkItemExample::WorkItemExample() :
+PumpControl::PumpControl() :
 	ModuleParams(nullptr),
 	ScheduledWorkItem(MODULE_NAME, px4::wq_configurations::test1)
 {
 }
 
-WorkItemExample::~WorkItemExample()
+PumpControl::~PumpControl()
 {
 	perf_free(_loop_perf);
 	perf_free(_loop_interval_perf);
 }
 
-bool WorkItemExample::init()
+bool PumpControl::init()
 {
 	// execute Run() on every sensor_accel publication
 	if (!_sensor_accel_sub.registerCallback()) {
@@ -59,7 +59,7 @@ bool WorkItemExample::init()
 	return true;
 }
 
-void WorkItemExample::Run()
+void PumpControl::Run()
 {
 	if (should_exit()) {
 		ScheduleClear();
@@ -118,18 +118,19 @@ void WorkItemExample::Run()
 
 	// Example
 	//  publish some data
-	orb_test_s data{};
-	data.val = 314159;
-	data.timestamp = hrt_absolute_time();
-	_orb_test_pub.publish(data);
+
+	// orb_test_s data{};
+	// data.val = 314159;
+	// data.timestamp = hrt_absolute_time();
+	// _orb_test_pub.publish(data);
 
 
 	perf_end(_loop_perf);
 }
 
-int WorkItemExample::task_spawn(int argc, char *argv[])
+int PumpControl::task_spawn(int argc, char *argv[])
 {
-	WorkItemExample *instance = new WorkItemExample();
+	PumpControl *instance = new PumpControl();
 
 	if (instance) {
 		_object.store(instance);
@@ -150,19 +151,19 @@ int WorkItemExample::task_spawn(int argc, char *argv[])
 	return PX4_ERROR;
 }
 
-int WorkItemExample::print_status()
+int PumpControl::print_status()
 {
 	perf_print_counter(_loop_perf);
 	perf_print_counter(_loop_interval_perf);
 	return 0;
 }
 
-int WorkItemExample::custom_command(int argc, char *argv[])
+int PumpControl::custom_command(int argc, char *argv[])
 {
 	return print_usage("unknown command");
 }
 
-int WorkItemExample::print_usage(const char *reason)
+int PumpControl::print_usage(const char *reason)
 {
 	if (reason) {
 		PX4_WARN("%s\n", reason);
@@ -184,5 +185,5 @@ Example of a simple module running out of a work queue.
 
 extern "C" __EXPORT int pump_control_main(int argc, char *argv[])
 {
-	return WorkItemExample::main(argc, argv);
+	return PumpControl::main(argc, argv);
 }

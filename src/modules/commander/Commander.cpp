@@ -2577,17 +2577,22 @@ Commander::run()
 			/* Reset the flag if disarmed. */
 			_have_taken_off_since_arming = false;
 		}
-		PX4_INFO("Ready");
                	/****************release*******************/
+		// mavlink_log_info(&_mavlink_log_pub, "Ready");
+		//PX4_INFO("Ready");
+		// if (_actuator_controls_sub.updated()) {
 		if (_t_actuator_controls_3.updated()) {
 
 			actuator_controls_s actuator_group_3{};
-			_actuator_controls_sub.copy(&actuator_group_3);
-			PX4_INFO("Ready to RTL");
+			_t_actuator_controls_3.copy(&actuator_group_3);
+			// mavlink_vasprintf(_MSG_PRIO_INFO, &_mavlink_log_pub, "Ready to RTL");
+			// mavlink_log_info(&_mavlink_log_pub, "Ready to RTL, %lf", (double)(actuator_group_3.control[5]));
+			//PX4_INFO("Ready to RTL");
                         //PX4_INFO("Ready to RTL, %f", (float)actuator_group_3.control[5]);
-			if(actuator_group_3.control[5] < 1300) {
+			if(actuator_group_3.control[5] < 0.0f) {
 				main_state_transition(_status, commander_state_s::MAIN_STATE_AUTO_RTL, _status_flags, _internal_state);
-				PX4_INFO("Already to RTL");
+				mavlink_log_info(&_mavlink_log_pub, "Ready to RTL, %lf", (double)(actuator_group_3.control[5]));
+
 			}
 
 		}
