@@ -2578,23 +2578,13 @@ Commander::run()
 			_have_taken_off_since_arming = false;
 		}
                	/****************release*******************/
-		// mavlink_log_info(&_mavlink_log_pub, "Ready");
-		//PX4_INFO("Ready");
-		// if (_actuator_controls_sub.updated()) {
-		if (_t_actuator_controls_3.updated()) {
+		if (_pump_status_sub.updated()) {
+			_pump_status_sub.copy(&_pump_status);
+			// mavlink_vasprintf(_MSG_PRIO_INFO, &_mavlink_log_pub, "go");
 
-			actuator_controls_s actuator_group_3{};
-			_t_actuator_controls_3.copy(&actuator_group_3);
-			// mavlink_vasprintf(_MSG_PRIO_INFO, &_mavlink_log_pub, "Ready to RTL");
-			// mavlink_log_info(&_mavlink_log_pub, "Ready to RTL, %lf", (double)(actuator_group_3.control[5]));
-			//PX4_INFO("Ready to RTL");
-                        //PX4_INFO("Ready to RTL, %f", (float)actuator_group_3.control[5]);
-			if(actuator_group_3.control[5] < 0.0f) {
+			if(_pump_status.pump_flag) {
 				main_state_transition(_status, commander_state_s::MAIN_STATE_AUTO_RTL, _status_flags, _internal_state);
-				mavlink_log_info(&_mavlink_log_pub, "Ready to RTL, %lf", (double)(actuator_group_3.control[5]));
-
 			}
-
 		}
 	        /******************************************/
 		/* now set navigation state according to failsafe and main state */

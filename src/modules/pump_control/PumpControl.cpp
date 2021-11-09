@@ -36,6 +36,7 @@
 PumpControl::PumpControl() :
 	ModuleParams(nullptr),
 	ScheduledWorkItem(MODULE_NAME, px4::wq_configurations::test1)
+	// ScheduledWorkItem(MODULE_NAME, px4::wq_configurations::lp_default)
 {
 }
 
@@ -47,6 +48,8 @@ PumpControl::~PumpControl()
 
 bool PumpControl::init()
 {
+
+	// pump_status.pump_flag = 0;
 	// execute Run() on every sensor_accel publication
 	if (!_sensor_accel_sub.registerCallback()) {
 		PX4_ERR("sensor_accel callback registration failed");
@@ -54,7 +57,7 @@ bool PumpControl::init()
 	}
 
 	// alternatively, Run on fixed interval
-	// ScheduleOnInterval(5000_us); // 2000 us interval, 200 Hz rate
+	ScheduleOnInterval(5000_us); // 2000 us interval, 200 Hz rate
 
 	return true;
 }
@@ -71,48 +74,80 @@ void PumpControl::Run()
 	perf_count(_loop_interval_perf);
 
 	// Check if parameters have changed
-	if (_parameter_update_sub.updated()) {
-		// clear update
-		parameter_update_s param_update;
-		_parameter_update_sub.copy(&param_update);
-		updateParams(); // update module parameters (in DEFINE_PARAMETERS)
-	}
+	// if (_parameter_update_sub.updated()) {
+	// 	// clear update
+	// 	parameter_update_s param_update;
+	// 	_parameter_update_sub.copy(&param_update);
+	// 	updateParams(); // update module parameters (in DEFINE_PARAMETERS)
+	// }
 
 
 	// Example
 	//  update vehicle_status to check arming state
-	if (_vehicle_status_sub.updated()) {
-		vehicle_status_s vehicle_status;
+	// if (_vehicle_status_sub.updated()) {
+	// 	vehicle_status_s vehicle_status;
 
-		if (_vehicle_status_sub.copy(&vehicle_status)) {
+	// 	if (_vehicle_status_sub.copy(&vehicle_status)) {
 
-			const bool armed = (vehicle_status.arming_state == vehicle_status_s::ARMING_STATE_ARMED);
+	// 		const bool armed = (vehicle_status.arming_state == vehicle_status_s::ARMING_STATE_ARMED);
 
-			if (armed && !_armed) {
-				PX4_WARN("vehicle armed due to %d", vehicle_status.latest_arming_reason);
+	// 		if (armed && !_armed) {
+	// 			PX4_WARN("vehicle armed due to %d", vehicle_status.latest_arming_reason);
 
-			} else if (!armed && _armed) {
-				PX4_INFO("vehicle disarmed due to %d", vehicle_status.latest_disarming_reason);
-			}
+	// 		} else if (!armed && _armed) {
+	// 			PX4_INFO("vehicle disarmed due to %d", vehicle_status.latest_disarming_reason);
+	// 		}
 
-			_armed = armed;
-		}
-	}
+	// 		_armed = armed;
+	// 	}
+	// }
 
 
 	// Example
 	//  grab latest accelerometer data
-	if (_sensor_accel_sub.updated()) {
-		sensor_accel_s accel;
+	// if (_sensor_accel_sub.updated()) {
+	// 	sensor_accel_s accel;
 
-		if (_sensor_accel_sub.copy(&accel)) {
-			// DO WORK
+	// 	if (_sensor_accel_sub.copy(&accel)) {
+	// 		// DO WORK
 
-			// access parameter value (SYS_AUTOSTART)
-			if (_param_sys_autostart.get() == 1234) {
-				// do something if SYS_AUTOSTART is 1234
+	// 		// access parameter value (SYS_AUTOSTART)
+	// 		if (_param_sys_autostart.get() == 1234) {
+	// 			// do something if SYS_AUTOSTART is 1234
+	// 		}
+	// 	}
+	// }
+        // mavlink_vasprintf(_MSG_PRIO_INFO, &_mavlink_log_pub, "pub");
+
+	// rpm_rpm.timestamp = hrt_absolute_time();
+	// _rpm_pub.publish(rpm_rpm);
+	if (_rpm_update_sub.updated()) {
+                rpm_s rpm_pcf8583;
+	        last_flag = pump_status.pump_flag;
+
+		if (_rpm_update_sub.copy(&rpm_pcf8583)) {
+
+			pump_status.pump_flow = rpm_pcf8583.indicated_frequency_rpm / 23;
+	 		// mavlink_vasprintf(_MSG_PRIO_INFO, &_mavlink_log_pub, "pump_flow:%lf", double(pump_status.pump_flow));
+
+			if (pump_status.pump_flow > 1.0f)
+			{
+                                pump_status.pump_flag = 1;
 			}
+			else {
+				pump_status.pump_flag = 0;
+			}
+
+			if (last_flag ^ pump_status.pump_flag) {
+				pump_status.timestamp = hrt_absolute_time();
+				_pump_status_pub.publish(pump_status);
+				// mavlink_vasprintf(_MSG_PRIO_INFO, &_mavlink_log_pub, "pub");
+
+			}
+
+
 		}
+
 	}
 
 

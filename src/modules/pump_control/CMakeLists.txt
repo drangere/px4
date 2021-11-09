@@ -32,7 +32,7 @@
 ############################################################################
 
 px4_add_module(
-	MODULE mouleds__pump_control
+	MODULE modules__pump_control
 	MAIN pump_control
 
 	SRCS
