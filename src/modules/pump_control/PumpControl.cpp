@@ -49,12 +49,12 @@ PumpControl::~PumpControl()
 bool PumpControl::init()
 {
 
-	// pump_status.pump_flag = 0;
+	pump_status.pump_flag = 0;
 	// execute Run() on every sensor_accel publication
-	if (!_sensor_accel_sub.registerCallback()) {
-		PX4_ERR("sensor_accel callback registration failed");
-		return false;
-	}
+	// if (!_sensor_accel_sub.registerCallback()) {
+	// 	PX4_ERR("sensor_accel callback registration failed");
+	// 	return false;
+	// }
 
 	// alternatively, Run on fixed interval
 	ScheduleOnInterval(5000_us); // 2000 us interval, 200 Hz rate
@@ -117,10 +117,7 @@ void PumpControl::Run()
 	// 		}
 	// 	}
 	// }
-        // mavlink_vasprintf(_MSG_PRIO_INFO, &_mavlink_log_pub, "pub");
 
-	// rpm_rpm.timestamp = hrt_absolute_time();
-	// _rpm_pub.publish(rpm_rpm);
 	if (_rpm_update_sub.updated()) {
                 rpm_s rpm_pcf8583;
 	        last_flag = pump_status.pump_flag;
