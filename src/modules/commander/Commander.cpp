@@ -2578,14 +2578,14 @@ Commander::run()
 			_have_taken_off_since_arming = false;
 		}
                	/****************release*******************/
-		if (_pump_status_sub.updated()) {
-			_pump_status_sub.copy(&_pump_status);
-			// mavlink_vasprintf(_MSG_PRIO_INFO, &_mavlink_log_pub, "go");
+		// if (_pump_status_sub.updated()) {
+		// 	_pump_status_sub.copy(&_pump_status);
+		// 	// mavlink_vasprintf(_MSG_PRIO_INFO, &_mavlink_log_pub, "go");
 
-			if(_pump_status.pump_flag) {
-				main_state_transition(_status, commander_state_s::MAIN_STATE_AUTO_RTL, _status_flags, _internal_state);
-			}
-		}
+		// 	if(_pump_status.pump_flag) {
+		// 		main_state_transition(_status, commander_state_s::MAIN_STATE_AUTO_RTL, _status_flags, _internal_state);
+		// 	}
+		// }
 	        /******************************************/
 		/* now set navigation state according to failsafe and main state */
 		bool nav_state_changed = set_nav_state(_status,

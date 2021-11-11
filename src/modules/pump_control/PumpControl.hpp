@@ -47,15 +47,17 @@
 #include <uORB/Publication.hpp>
 #include <uORB/Subscription.hpp>
 #include <uORB/SubscriptionCallback.hpp>
+#include <uORB/topics/mavlink_log.h>
 #include <uORB/topics/parameter_update.h>
 #include <uORB/topics/pump_status.h>
 #include <uORB/topics/rpm.h>
-#include <uORB/topics/sensor_accel.h>
 #include <uORB/topics/vehicle_status.h>
-#include <uORB/topics/mavlink_log.h>
 
 
 using namespace time_literals;
+
+//static constexpr uint32_t PUMP_SCHEDULE_INTERVAL{100_ms};    /**< The schedule interval in usec (10 Hz) */
+
 
 class PumpControl : public ModuleBase<PumpControl>, public ModuleParams, public px4::ScheduledWorkItem
 {
@@ -79,23 +81,20 @@ public:
 private:
 	void Run() override;
 
-        bool last_flag;
+        bool last_flag{false};
+	bool _armed{false};
 
         // pump_control publications
 	pump_status_s   pump_status{};
-	// rpm_s           rpm_rpm{};
 
 	// Subscriptions
 	// uORB::SubscriptionInterval         _rpm_update_sub{ORB_ID(rpm), 500_ms};
-	uORB::Subscription                 _rpm_update_sub{ORB_ID(rpm)};
-	uORB::SubscriptionCallbackWorkItem _sensor_accel_sub{this, ORB_ID(sensor_accel)};        // subscription that schedules WorkItemExample when updated
+	uORB::SubscriptionCallbackWorkItem _rpm_update_sub{this, ORB_ID(rpm)};
 	uORB::SubscriptionInterval         _parameter_update_sub{ORB_ID(parameter_update), 1_s}; // subscription limited to 1 Hz updates
 	uORB::Subscription                 _vehicle_status_sub{ORB_ID(vehicle_status)};          // regular subscription for additional data
 
 	// Publications
-	// uORB::Publication<orb_test_s> _orb_test_pub{ORB_ID(orb_test)};
 	uORB::Publication<pump_status_s>  _pump_status_pub{ORB_ID(pump_status)};
-	// uORB::Publication<rpm_s>          _rpm_pub{ORB_ID(rpm)};
 
 	orb_advert_t _mavlink_log_pub{nullptr};
 
@@ -109,6 +108,4 @@ private:
 		(ParamInt<px4::params::SYS_AUTOCONFIG>) _param_sys_autoconfig  /**< another parameter */
 	)
 
-
-	bool _armed{false};
 };
