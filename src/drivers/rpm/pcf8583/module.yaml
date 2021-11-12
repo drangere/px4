@@ -1,7 +1,0 @@
-module_name: PCF8583 Tachometer Sensor
-serial_config:
-    - command: pcf8583 start -X
-      port_config_param:
-        name: SENS_PCF8583_CFG
-        group: Sensors
-

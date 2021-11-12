@@ -41,6 +41,26 @@
 
 #include "PumpControl.hpp"
 
+static bool send_vehicle_command(const uint32_t cmd, const float param1 = NAN, const float param2 = NAN, const float param3 = NAN)
+{
+	vehicle_command_s vcmd{};
+	vcmd.command = cmd;
+	vcmd.param1 = param1;
+	vcmd.param2 = param2;
+	vcmd.param3 = param3;
+
+	uORB::SubscriptionData<vehicle_status_s> vehicle_status_sub{ORB_ID(vehicle_status)};
+	vcmd.source_system = vehicle_status_sub.get().system_id;
+	vcmd.target_system = vehicle_status_sub.get().system_id;
+	vcmd.source_component = vehicle_status_sub.get().component_id;
+	vcmd.target_component = vehicle_status_sub.get().component_id;
+
+	uORB::Publication<vehicle_command_s> vcmd_pub{ORB_ID(vehicle_command)};
+	vcmd.timestamp = hrt_absolute_time();
+	return vcmd_pub.publish(vcmd);
+}
+
+
 PumpControl::PumpControl() :
 	ModuleParams(nullptr),
 	ScheduledWorkItem(MODULE_NAME, px4::wq_configurations::lp_default)
@@ -76,51 +96,53 @@ void PumpControl::Run()
 	perf_begin(_loop_perf);
 	perf_count(_loop_interval_perf);
 
-	// Example
-	//  update vehicle_status to check arming state
-	// if (_vehicle_status_sub.updated()) {
-	// 	vehicle_status_s vehicle_status;
-
-	// 	if (_vehicle_status_sub.copy(&vehicle_status)) {
-
-	// 		const bool armed = (vehicle_status.arming_state == vehicle_status_s::ARMING_STATE_ARMED);
-
-	// 		if (armed && !_armed) {
-	// 			PX4_WARN("vehicle armed due to %d", vehicle_status.latest_arming_reason);
-
-	// 		} else if (!armed && _armed) {
-	// 			PX4_INFO("vehicle disarmed due to %d", vehicle_status.latest_disarming_reason);
-	// 		}
-
-	// 		_armed = armed;
-	// 	}
-	// }
-
+	//得到rpm频率并计算流量
 	if (_rpm_update_sub.updated()) {
                 rpm_s rpm_pcf8583;
-	        last_flag = pump_status.pump_flag;
 
 		if (_rpm_update_sub.copy(&rpm_pcf8583)) {
-
+                        //脉冲特性 F=Q*23 +-10%
 			pump_status.pump_flow = rpm_pcf8583.indicated_frequency_rpm / 23;
 	 		// mavlink_vasprintf(_MSG_PRIO_INFO, &_mavlink_log_pub, "pump_flow:%lf", double(pump_status.pump_flow));
+                        const bool low_flow = (pump_status.pump_flow > 0.1f) ? true : false;
 
-			if (pump_status.pump_flow > 1.0f)
-			{
-                                pump_status.pump_flag = 1;
-			}
-			else {
-				pump_status.pump_flag = 0;
-			}
+			if (low_flow && !_low_flow) {
+				low_flow_flag = true;
 
-			if (last_flag ^ pump_status.pump_flag) {
-				pump_status.timestamp = hrt_absolute_time();
-				_pump_status_pub.publish(pump_status);
-				// mavlink_vasprintf(_MSG_PRIO_INFO, &_mavlink_log_pub, "pub");
-
+			} else if (!low_flow && _low_flow) {
+				low_flow_flag = false;
 			}
 
+			_low_flow = low_flow;
+		}
+	}
 
+	//是否处于返航或任务模式
+	if (_vehicle_status_sub.updated()) {
+		vehicle_status_s vehicle_status;
+
+		if (_vehicle_status_sub.copy(&vehicle_status)) {
+			// armd_flag = (vehicle_status.arming_state == vehicle_status_s::ARMING_STATE_ARMED);
+			RTL_on_flag = (vehicle_status.nav_state == vehicle_status_s::NAVIGATION_STATE_AUTO_RTL);
+		        mission_on_flag = (vehicle_status.nav_state == vehicle_status_s::NAVIGATION_STATE_AUTO_MISSION);
+		}
+	}
+
+	//水泵是否在运行，pwm_min = 1075
+	if (_act_output_sub.updated()) {
+		actuator_outputs_s act;
+
+		if (_act_output_sub.copy(&act)) {
+	 	        //mavlink_vasprintf(_MSG_PRIO_INFO, &_mavlink_log_pub, "aux1:%.2f", double(act.output[4]));
+			pump_on_flag = (act.output[4] > 1150) ? true : false;
+		}
+	}
+
+        if (low_flow_flag && !RTL_on_flag && pump_on_flag) {
+                uORB::SubscriptionData<vehicle_constraints_s>  _vehicle_constraints_sub{ORB_ID(vehicle_constraints)};
+		// if (armd_flag) {
+		if (mission_on_flag && (_vehicle_constraints_sub.get().speed_xy > 0.5f)) {
+			send_vehicle_command(vehicle_command_s::VEHICLE_CMD_DO_SET_MODE, 1, PX4_CUSTOM_MAIN_MODE_AUTO, PX4_CUSTOM_SUB_MODE_AUTO_RTL);
 		}
 
 	}
