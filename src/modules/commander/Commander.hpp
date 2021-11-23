@@ -76,7 +76,7 @@
 #include <uORB/topics/offboard_control_mode.h>
 #include <uORB/topics/parameter_update.h>
 #include <uORB/topics/power_button_state.h>
-#include <uORB/topics/pump_status.h>
+// #include <uORB/topics/pump_status.h>
 #include <uORB/topics/rtl_flight_time.h>
 #include <uORB/topics/safety.h>
 #include <uORB/topics/system_power.h>
@@ -383,7 +383,7 @@ private:
 	vehicle_land_detected_s	_land_detector{};
 	safety_s		_safety{};
 	vtol_vehicle_status_s	_vtol_status{};
-	pump_status_s           _pump_status{};
+	// pump_status_s           _pump_status{};
 
 	// commander publications
 	actuator_armed_s        _armed{};
@@ -406,8 +406,8 @@ private:
 	uORB::Subscription					_safety_sub{ORB_ID(safety)};
 	uORB::Subscription					_manual_control_switches_sub{ORB_ID(manual_control_switches)};
 	/****************release*******************/
-	uORB::Subscription	                                _t_actuator_controls_3{ORB_ID(actuator_controls_3)};
-        uORB::Subscription                                      _pump_status_sub{ORB_ID(pump_status)};
+	// uORB::Subscription	                                _t_actuator_controls_3{ORB_ID(actuator_controls_3)};
+        // uORB::Subscription                                      _pump_status_sub{ORB_ID(pump_status)};
 	/******************************************/
 	uORB::Subscription					_system_power_sub{ORB_ID(system_power)};
 	uORB::Subscription					_vehicle_angular_velocity_sub{ORB_ID(vehicle_angular_velocity)};

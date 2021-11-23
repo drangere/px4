@@ -107,9 +107,11 @@ private:
 	// Subscriptions
 	uORB::SubscriptionCallbackWorkItem _rpm_update_sub{this, ORB_ID(rpm)};
 	uORB::SubscriptionInterval         _parameter_update_sub{ORB_ID(parameter_update), 1_s}; // subscription limited to 1 Hz updates
-        uORB::Subscription	           _actuator_controls_3_sub{ORB_ID(actuator_controls_3)};
+
 	uORB::Subscription                 _act_output_sub{ORB_ID(actuator_outputs)};
-	uORB::Subscription                 _vehicle_constraints_sub{ORB_ID(vehicle_constraints)};
+        uORB::Subscription	           _actuator_controls_3_sub{ORB_ID(actuator_controls_3)};
+	// uORB::Subscription                 _vehicle_constraints_sub{ORB_ID(vehicle_constraints)};
+	uORB::Subscription	           _vehicle_cmd_sub{ORB_ID(vehicle_command)};            // get the param from the mission manager
 	uORB::Subscription                 _vehicle_status_sub{ORB_ID(vehicle_status)};          // regular subscription for additional data
 
 	// Publications

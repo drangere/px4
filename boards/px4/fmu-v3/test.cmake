@@ -42,6 +42,7 @@ px4_add_board(
 		osd
 		pca9685
 		pca9685_pwm_out
+		pump_output
 		#power_monitor/ina226
 		#protocol_splitter
 		pwm_input
