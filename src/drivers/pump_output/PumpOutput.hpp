@@ -197,11 +197,11 @@ public:
 private:
 	void Run() override;
 
-	void parameters_update();
+	// void parameters_update();
 
-        DEFINE_PARAMETERS(
-		(ParamFloat<px4::parameters_volatile::PUMP_ACC_RAD>) _pump_acc_rad
-	)
+        // DEFINE_PARAMETERS(
+	// 	(ParamFloat<px4::parameters_volatile::PUMP_ACC_RAD>) _pump_acc_rad
+	// )
 	// Subscriptions
 	uORB::SubscriptionInterval                               _parameter_update_sub{ORB_ID(parameter_update), 1_s}; // subscription limited to 1 Hz updates
 

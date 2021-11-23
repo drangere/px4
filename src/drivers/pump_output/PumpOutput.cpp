@@ -148,7 +148,7 @@ void PumpOutput::Run()
 
 	perf_begin(_loop_perf);
 	perf_count(_loop_interval_perf);
-	parameters_update();
+	// parameters_update();
 
 	if (_vehicle_gps_pos_sub.updated()) {
 		const vehicle_gps_position_s &gpos = _vehicle_gps_pos_sub.get();
@@ -163,11 +163,11 @@ void PumpOutput::Run()
 		float local_next_dis = get_distance_to_next_waypoint(gpos.lat, gpos.lon, pos_sp_triplet.next.lat, pos_sp_triplet.next.lon);
 
 		double p = (points_dis + local_pre_dis + local_next_dis) / 2;
-		double s = sqrt(p * (p - points_dis) * (p - local_pre_dis) * (p - local_next_dis));  //海伦公式
+		double s = sqrt(p * (p - (double)points_dis) * (p - (double)local_pre_dis) * (p - (double)local_next_dis));  //海伦公式
 
 		if (pos_sp_triplet.current.type == position_setpoint_s::SETPOINT_TYPE_POSITION &&
 			_vehicle_status_sub.get().nav_state == vehicle_status_s::NAVIGATION_STATE_AUTO_MISSION &&
-			s < s_limit && local_next_dis < hypotenuse) {
+			s < s_limit && (double)local_next_dis < hypotenuse) {
 
 			const vehicle_local_position_s &lpos = _vehicle_local_position_sub.get();
 			double speed_xy = sqrt(lpos.vx * lpos.vx + lpos.vy * lpos.vy);
@@ -185,17 +185,17 @@ void PumpOutput::Run()
 	perf_end(_loop_perf);
 }
 
-void PumpOutput::parameters_update()
-{
-	if (_parameter_update_sub.updated()) {
-		parameter_update_s param_update;
-		_parameter_update_sub.copy(&param_update);
+// void PumpOutput::parameters_update()
+// {
+// 	if (_parameter_update_sub.updated()) {
+// 		parameter_update_s param_update;
+// 		_parameter_update_sub.copy(&param_update);
 
-		// If any parameter updated, call updateParams() to check if
-		// this class attributes need updating (and do so).
-		updateParams();
-	}
-}
+// 		// If any parameter updated, call updateParams() to check if
+// 		// this class attributes need updating (and do so).
+// 		updateParams();
+// 	}
+// }
 
 int PumpOutput::task_spawn(int argc, char *argv[])
 {

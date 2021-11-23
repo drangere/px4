@@ -104,7 +104,7 @@ void PumpControl::Run()
                         //脉冲特性 F=Q*23 +-10%
 			pump_status.pump_flow = rpm_pcf8583.indicated_frequency_rpm / 23;
 	 		// mavlink_vasprintf(_MSG_PRIO_INFO, &_mavlink_log_pub, "pump_flow:%lf", double(pump_status.pump_flow));
-                        const bool low_flow = (pump_status.pump_flow > 0.1f) ? true : false;
+                        const bool low_flow = (pump_status.pump_flow < 0.1f) ? true : false;
 
 			if (low_flow && !_low_flow) {
 				low_flow_flag = true;
@@ -124,7 +124,7 @@ void PumpControl::Run()
 		if (_vehicle_status_sub.copy(&vehicle_status)) {
 			// armd_flag = (vehicle_status.arming_state == vehicle_status_s::ARMING_STATE_ARMED);
 			RTL_on_flag = (vehicle_status.nav_state == vehicle_status_s::NAVIGATION_STATE_AUTO_RTL);
-		        mission_on_flag = (vehicle_status.nav_state == vehicle_status_s::NAVIGATION_STATE_AUTO_MISSION);
+		        // mission_on_flag = (vehicle_status.nav_state == vehicle_status_s::NAVIGATION_STATE_AUTO_MISSION);
 		}
 	}
 
@@ -133,15 +133,19 @@ void PumpControl::Run()
 		actuator_outputs_s act;
 
 		if (_act_output_sub.copy(&act)) {
-	 	        //mavlink_vasprintf(_MSG_PRIO_INFO, &_mavlink_log_pub, "aux1:%.2f", double(act.output[4]));
 			pump_on_flag = (act.output[4] > 1150) ? true : false;
 		}
 	}
 
         if (low_flow_flag && !RTL_on_flag && pump_on_flag) {
-                uORB::SubscriptionData<vehicle_constraints_s>  _vehicle_constraints_sub{ORB_ID(vehicle_constraints)};
-		// if (armd_flag) {
-		if (mission_on_flag && (_vehicle_constraints_sub.get().speed_xy > 0.5f)) {
+		// const vehicle_local_position_s &lpos = _vehicle_local_position_sub.get();
+		// double speed_xy = sqrt(lpos.vx * lpos.vx + lpos.vy * lpos.vy);
+		// if (mission_on_flag && (speed_xy > 0.5f)) {
+		const position_setpoint_triplet_s &pos_sp_triplet = _position_setpoint_triplet_sub.get();
+
+		if (pos_sp_triplet.current.type == position_setpoint_s::SETPOINT_TYPE_POSITION &&
+		    _vehicle_status_sub.get().nav_state == vehicle_status_s::NAVIGATION_STATE_AUTO_MISSION) {
+
 			send_vehicle_command(vehicle_command_s::VEHICLE_CMD_DO_SET_MODE, 1, PX4_CUSTOM_MAIN_MODE_AUTO, PX4_CUSTOM_SUB_MODE_AUTO_RTL);
 		}
 

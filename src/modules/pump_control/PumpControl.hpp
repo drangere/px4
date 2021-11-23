@@ -59,7 +59,9 @@
 #include <uORB/topics/vehicle_status.h>
 #include <uORB/topics/vehicle_constraints.h>
 #include <uORB/topics/vehicle_command.h>
-
+#include <uORB/topics/vehicle_local_position.h>
+#include <uORB/topics/position_setpoint_triplet.h>
+#include <uORB/topics/position_setpoint.h>
 
 using namespace time_literals;
 
@@ -89,10 +91,10 @@ private:
 	void Run() override;
 
 	// Parameters
-	DEFINE_PARAMETERS(
-		(ParamInt<px4::params::SYS_AUTOSTART>) _param_sys_autostart,   /**< example parameter */
-		(ParamInt<px4::params::SYS_AUTOCONFIG>) _param_sys_autoconfig  /**< another parameter */
-	)
+	// DEFINE_PARAMETERS(
+	// 	(ParamInt<px4::params::SYS_AUTOSTART>) _param_sys_autostart,   /**< example parameter */
+	// 	(ParamInt<px4::params::SYS_AUTOCONFIG>) _param_sys_autoconfig  /**< another parameter */
+	// )
         bool _low_flow{false};
 	bool low_flow_flag{false};
 
@@ -102,7 +104,7 @@ private:
 	bool pump_on_flag{false};
 
         // pump_control publications
-	pump_status_s   pump_status{};
+	pump_status_s   pump_status;
 
 	// Subscriptions
 	uORB::SubscriptionCallbackWorkItem _rpm_update_sub{this, ORB_ID(rpm)};
@@ -112,7 +114,10 @@ private:
         uORB::Subscription	           _actuator_controls_3_sub{ORB_ID(actuator_controls_3)};
 	// uORB::Subscription                 _vehicle_constraints_sub{ORB_ID(vehicle_constraints)};
 	uORB::Subscription	           _vehicle_cmd_sub{ORB_ID(vehicle_command)};            // get the param from the mission manager
-	uORB::Subscription                 _vehicle_status_sub{ORB_ID(vehicle_status)};          // regular subscription for additional data
+	uORB::SubscriptionData<position_setpoint_triplet_s>      _position_setpoint_triplet_sub{ORB_ID(position_setpoint_triplet)};
+        uORB::SubscriptionData<vehicle_status_s>                 _vehicle_status_sub{ORB_ID(vehicle_status)};
+	uORB::SubscriptionData<vehicle_local_position_s>         _vehicle_local_position_sub{ORB_ID(vehicle_local_position)};
+
 
 	// Publications
 	uORB::Publication<pump_status_s>   _pump_status_pub{ORB_ID(pump_status)};

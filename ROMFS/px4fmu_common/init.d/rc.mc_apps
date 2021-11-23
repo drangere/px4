@@ -71,4 +71,5 @@ mc_pos_control start
 land_detector start multicopter
 
 pump_control start
-fake_gps start
+pump_output  start
+# fake_gps start
